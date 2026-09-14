@@ -154,13 +154,13 @@ jobs:
           arch=${{ matrix.arch }}
           case $arch in
             arm64-v8a)
-              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument"
+              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
               ;;
             armeabi-v7a)
-              GLOBAL_FLAGS="-O3 -mfloat-abi=softfp -mfpu=neon -Wno-unused-parameter -Wno-unused-command-line-argument"
+              GLOBAL_FLAGS="-O3 -mfloat-abi=softfp -mfpu=neon -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
               ;;
             x86_64)
-              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument"
+              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
               ;;
           esac
 
