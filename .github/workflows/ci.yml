@@ -180,11 +180,17 @@ jobs:
             GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
           fi
 
-          # --- Compile cpuinfo stub with correct arch compiler (needs $CC) ---
-          $CC -c -o cpuinfo_ohos_stub.o ../cmake/cpuinfo_ohos_stub.c
-          ar rcs cpuinfo_ohos_stub.a cpuinfo_ohos_stub.o
-          STUB_ABS=$(pwd)/cpuinfo_ohos_stub.a
-          echo "Stub at: $STUB_ABS"
+          # --- Disable cpuinfo: prevent FetchContent from building it ---
+          sed -i.bak '/FetchContent_Declare.*cpuinfo/,/)/c\# cpuinfo disabled for OHOS' \
+            cmake/deps.txt cmake/CMakeLists.txt 2>/dev/null || true
+          # Also patch the cpuinfo source to be empty
+          mkdir -p onnxruntime/third_party/cpuinfo
+          echo 'void cpuinfo_x86_linux_init(void) {}' > onnxruntime/third_party/cpuinfo/cpuinfo.c
+          echo 'void cpuinfo_x86_linux_deinit(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
+          echo 'void cpuinfo_arm_linux_init(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
+          echo 'void cpuinfo_arm_linux_deinit(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
+          echo 'struct cpuinfo_isa { int dummy; };' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
+          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
@@ -198,7 +204,7 @@ jobs:
             -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined -Wl,--allow-multiple-definition -Wl,--whole-archive $STUB_ABS -Wl,--no-whole-archive" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_USE_CPUINFO=OFF \
