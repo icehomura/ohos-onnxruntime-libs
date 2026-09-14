@@ -109,13 +109,15 @@ jobs:
             onnxruntime/core/providers/cpu/math/matmul.cc
 
           # --- Create cpuinfo stub source (compiled in Build step with correct arch compiler) ---
-          echo '#include <stddef.h>' > cmake/cpuinfo_ohos_stub.c
-          echo 'struct cpuinfo_isa { int dummy; };' >> cmake/cpuinfo_ohos_stub.c
-          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> cmake/cpuinfo_ohos_stub.c
-          echo 'void cpuinfo_x86_linux_init(void) {}' >> cmake/cpuinfo_ohos_stub.c
-          echo 'void cpuinfo_x86_linux_deinit(void) {}' >> cmake/cpuinfo_ohos_stub.c
-          echo 'void cpuinfo_arm_linux_init(void) {}' >> cmake/cpuinfo_ohos_stub.c
-          echo 'void cpuinfo_arm_linux_deinit(void) {}' >> cmake/cpuinfo_ohos_stub.c
+          cat > cmake/cpuinfo_ohos_stub.c << 'EOF'
+#include <stddef.h>
+struct cpuinfo_isa { int dummy; };
+struct cpuinfo_isa cpuinfo_isa = {0};
+void cpuinfo_x86_linux_init(void) {}
+void cpuinfo_x86_linux_deinit(void) {}
+void cpuinfo_arm_linux_init(void) {}
+void cpuinfo_arm_linux_deinit(void) {}
+EOF
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
           find onnxruntime -name '*.cpp' -o -name '*.h' | \
