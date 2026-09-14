@@ -1,0 +1,217 @@
+name: Build ONNX Runtime for OpenHarmony
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "ONNX Runtime version (e.g., 1.29.1)"
+        required: false
+        default: '1.29.1'
+
+permissions:
+  contents: write
+
+env:
+  ONNXRUNTIME_VERSION: ${{ github.event.inputs.version || '1.29.1' }}
+
+jobs:
+  build:
+    name: "OHOS ${{ matrix.arch }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64-v8a, armeabi-v7a, x86_64]
+
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Download OHOS SDK
+        shell: bash
+        run: |
+          curl -L -O https://github.com/openharmony-rs/ohos-sdk/releases/download/v4.1/ohos-sdk-windows_linux-public.tar.gz.aa
+          curl -L -O https://github.com/openharmony-rs/ohos-sdk/releases/download/v4.1/ohos-sdk-windows_linux-public.tar.gz.ab
+          cat ohos-sdk-windows_linux-public.tar.gz.aa ohos-sdk-windows_linux-public.tar.gz.ab > ohos-sdk-windows_linux-public.tar.gz
+          tar -xzf ohos-sdk-windows_linux-public.tar.gz
+          rm ohos-sdk-windows_linux-public.tar.gz*
+          cd ohos-sdk/linux && unzip native-linux-x64-4.1.7.5-Release.zip
+          cd ../..
+          mkdir -p command-line-tools/sdk/default/openharmony
+          mv ohos-sdk/linux/native command-line-tools/sdk/default/openharmony/
+          rm -rf ohos-sdk
+
+      - name: Checkout ORT v${{ env.ONNXRUNTIME_VERSION }}
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/onnxruntime
+          ref: v${{ env.ONNXRUNTIME_VERSION }}
+          path: ./onnxruntime
+
+      - name: Patch for OHOS compatibility
+        shell: bash
+        run: |
+          cd onnxruntime
+
+          # --- cmake patch: force Linux target + shared lib ---
+          pushd cmake
+          sed -i.bak 's/"Build ONNXRuntime unit tests" ON/"Build ONNXRuntime unit tests" OFF/' ./CMakeLists.txt
+          sed -i.bak 's/"Build a shared library" OFF/"Build a shared library" ON/' ./CMakeLists.txt
+          popd
+
+          # --- tools/ci_build patch ---
+          pushd tools/ci_build
+          sed -i.bak s/-fcf-protection// ./build.py
+          popd
+
+          # --- env.cc: skip pthread_setaffinity_np on musl ---
+          sed -i.bak 's/#if !defined(__APPLE__) && !defined(__ANDROID__) && !defined(__wasm__) && !defined(_AIX)/#if 0/' \
+            onnxruntime/core/platform/posix/env.cc
+
+          # --- bfloat16/fp16 exclusion for OHOS clang 15 ---
+          find onnxruntime/core/mlas -name '*.h' -o -name '*.cpp' -o -name '*.cc' | \
+            xargs sed -i.bak 's/#if defined(__aarch64__) && defined(__linux__)/#if defined(__aarch64__) \&\& defined(__linux__) \&\& !defined(__OHOS__)/g'
+
+          pushd onnxruntime/core/mlas/inc
+          sed -i.bak 's/#if !defined(__APPLE__)/#if !defined(__APPLE__) \&\& !defined(__OHOS__)/g' mlas.h
+          popd
+
+          # --- Remove fp16/bf16 source files from cmake ---
+          pushd cmake
+          for f in \
+            hqnbitgemm_kernel_neon_fp16.cpp hqnbitgemm_kernel_neon_fp16_8bit.cpp \
+            rotary_embedding_kernel_neon_fp16.cpp halfgemm_kernel_neon_fp16.cpp \
+            softmax_kernel_neon_fp16.cpp eltwise_kernel_neon_fp16.cpp \
+            erf_neon_fp16. gelu_neon_fp16. activate_fp16.cpp pooling_fp16.cpp \
+            cast_kernel_neon.cpp HalfGemmKernelNeon.S sbgemm_kernel_neon.cpp \
+            sbconv_kernel_neon.cpp SbgemmKernelNeon.S SconvDepthwiseKernelNeonBf16.S \
+            SconvKernelNeonBf16.S SconvPointwiseKernelNeonBf16.S \
+            HAS_ARM64_BFLOAT16 HAS_ARM64_FLOAT16; do
+            sed -i.bak "/${f}/d" onnxruntime_mlas.cmake
+          done
+          sed -i.bak '/cvtfp16Avx\.S/d' onnxruntime_mlas.cmake
+          sed -i.bak '/cvtfp16a\.S/d' onnxruntime_mlas.cmake
+          sed -i.bak '/cvtfp16Avx\.asm/d' onnxruntime_mlas.cmake
+          popd
+
+          # --- Platform.cpp: disable fp16 kernel on OHOS ---
+          sed -i.bak 's/this->CastF16ToF32Kernel = &MlasCastF16ToF32KernelSse;/this->CastF16ToF32Kernel = nullptr;/' \
+            onnxruntime/core/mlas/lib/platform.cpp
+
+          # --- matmul: disable bf16 acceleration ---
+          sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
+            onnxruntime/core/providers/cpu/math/matmul.h
+
+          # --- MLAS SBGEMM stubs for OHOS ---
+          f=onnxruntime/core/mlas/inc/mlas.h
+          printf '\n#ifdef __OHOS__\n' >> $f
+          printf '// bf16/sbgemm stubs for OHOS\n' >> $f
+          printf 'struct MLAS_SBGEMM_POSTPROCESSOR {};\n' >> $f
+          printf 'struct MLAS_SBGEMM_DATA_PARAMS {\n' >> $f
+          printf '  const void *A; const void *B; const float *Bias; float *C;\n' >> $f
+          printf '  size_t lda; size_t ldb; size_t ldc;\n' >> $f
+          printf '  const MLAS_SBGEMM_POSTPROCESSOR *OutputProcessor;\n' >> $f
+          printf '  bool AIsfp32; bool BIsfp32; bool ZeroMode; bool BIsPacked;\n' >> $f
+          printf '};\n' >> $f
+          printf 'static inline void MlasSBGemmConvertPackB(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,bool,size_t,size_t,const float*,size_t,void*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
+          printf 'static inline void MlasSBGemmBatch(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,size_t,size_t,size_t,size_t,const MLAS_SBGEMM_DATA_PARAMS*,MLAS_THREADPOOL*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
+          printf 'static inline bool MlasBf16AccelerationSupported(){return false;}\n' >> $f
+          printf '#endif\n' >> $f
+
+          echo "=== Patches applied ==="
+          git diff --stat
+
+      - name: Build onnxruntime v${{ env.ONNXRUNTIME_VERSION }}
+        shell: bash
+        run: |
+          cd onnxruntime
+          mkdir build-shared && cd build-shared
+
+          OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
+
+          arch=${{ matrix.arch }}
+          case $arch in
+            arm64-v8a)
+              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument"
+              ;;
+            armeabi-v7a)
+              GLOBAL_FLAGS="-O3 -mfloat-abi=softfp -mfpu=neon -Wno-unused-parameter -Wno-unused-command-line-argument"
+              ;;
+            x86_64)
+              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument"
+              ;;
+          esac
+
+          cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
+            -DOHOS_ARCH=$arch \
+            -DOHOS_PLATFORM=OHOS \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=$PWD \
+            -Donnxruntime_CROSS_COMPILING=ON \
+            -Donnxruntime_BUILD_SHARED_LIB=ON \
+            -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
+            -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
+            -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax" \
+            --compile-no-warning-as-error \
+            -Donnxruntime_BUILD_UNIT_TESTS=OFF \
+            -Donnxruntime_BUILD_BENCHMARKS=OFF \
+            -Donnxruntime_ENABLE_PYTHON=OFF \
+            -Donnxruntime_BUILD_CSHARP=OFF \
+            -Donnxruntime_BUILD_JAVA=OFF \
+            -Donnxruntime_BUILD_NODEJS=OFF \
+            -Donnxruntime_DISABLE_ML_OPS=OFF \
+            -Donnxruntime_DISABLE_CONTRIB_OPS=OFF \
+            -Donnxruntime_USE_XNNPACK=OFF \
+            -Donnxruntime_USE_NNAPI_BUILTIN=OFF \
+            -Donnxruntime_USE_CUDA=OFF \
+            -Donnxruntime_USE_TENSORRT=OFF \
+            -Donnxruntime_USE_DML=OFF \
+            -Donnxruntime_USE_OPENVINO=OFF \
+            -Donnxruntime_USE_VITISAI=OFF \
+            -Donnxruntime_USE_ACL=OFF \
+            -Donnxruntime_USE_ARMNN=OFF \
+            -Donnxruntime_USE_CANN=OFF \
+            -Donnxruntime_USE_ROCM=OFF \
+            -Donnxruntime_USE_RKNPU=OFF \
+            -Donnxruntime_MINIMAL_BUILD=OFF \
+            -Donnxruntime_ENABLE_LTO=OFF \
+            -DFETCHCONTENT_QUIET=OFF \
+            ../cmake
+
+          make -j$(nproc)
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          cd onnxruntime
+          build_dir=./build-shared
+          version=${{ env.ONNXRUNTIME_VERSION }}
+          arch=${{ matrix.arch }}
+          artifact=onnxruntime-ohos-${arch}-${version}
+
+          mkdir -p ../output/include
+          cp $build_dir/libonnxruntime.so* ../output/ 2>/dev/null || \
+          cp $(find $build_dir -name "libonnxruntime.so*" | head -1) ../output/
+          cp include/onnxruntime/core/session/onnxruntime_c_api.h ../output/ 2>/dev/null || true
+
+          cd ../output
+          file libonnxruntime.so
+          readelf -d libonnxruntime.so | grep NEEDED
+          ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-ohos-${{ matrix.arch }}-${{ env.ONNXRUNTIME_VERSION }}
+          path: output/
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output/libonnxruntime.so*
+          tag_name: v${{ env.ONNXRUNTIME_VERSION }}
+          generate_release_notes: true
