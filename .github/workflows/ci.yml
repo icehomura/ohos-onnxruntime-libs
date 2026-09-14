@@ -52,9 +52,10 @@ jobs:
           path: ./onnxruntime
 
       - name: Patch for OHOS compatibility
-        working-directory: onnxruntime
         shell: bash
         run: |
+          cd $GITHUB_WORKSPACE/onnxruntime
+
           # --- cmake patch: force Linux target + shared lib ---
           pushd cmake
           sed -i.bak 's/"Build ONNXRuntime unit tests" ON/"Build ONNXRuntime unit tests" OFF/' ./CMakeLists.txt
@@ -155,11 +156,11 @@ jobs:
           git diff --stat
 
       - name: Build onnxruntime v${{ env.ONNXRUNTIME_VERSION }}
-        working-directory: onnxruntime
         shell: bash
         run: |
+          cd $GITHUB_WORKSPACE/onnxruntime
           echo "BUILD PWD=$(pwd)"
-          ls cmake/cpuinfo_ohos_stub.c 2>/dev/null && echo "STUB FOUND in BUILD" || echo "STUB NOT FOUND in BUILD"
+          ls cmake/cpuinfo_ohos_stub.c 2>/dev/null && echo "STUB FOUND" || echo "STUB NOT FOUND"
           mkdir build-shared && cd build-shared
 
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
