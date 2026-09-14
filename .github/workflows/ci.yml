@@ -116,6 +116,7 @@ jobs:
           echo 'void cpuinfo_x86_linux_deinit(void) {}' >> cmake/cpuinfo_ohos_stub.c
           echo 'void cpuinfo_arm_linux_init(void) {}' >> cmake/cpuinfo_ohos_stub.c
           echo 'void cpuinfo_arm_linux_deinit(void) {}' >> cmake/cpuinfo_ohos_stub.c
+          ls -la cmake/cpuinfo_ohos_stub.c && echo "STUB FILE CREATED OK" || echo "STUB FILE MISSING"
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
           find onnxruntime -name '*.cpp' -o -name '*.h' | \
