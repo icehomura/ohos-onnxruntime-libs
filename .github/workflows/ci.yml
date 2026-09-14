@@ -55,8 +55,6 @@ jobs:
         working-directory: onnxruntime
         shell: bash
         run: |
-          cd onnxruntime
-
           # --- cmake patch: force Linux target + shared lib ---
           pushd cmake
           sed -i.bak 's/"Build ONNXRuntime unit tests" ON/"Build ONNXRuntime unit tests" OFF/' ./CMakeLists.txt
