@@ -52,6 +52,7 @@ jobs:
           path: ./onnxruntime
 
       - name: Patch for OHOS compatibility
+        working-directory: onnxruntime
         shell: bash
         run: |
           cd onnxruntime
