@@ -99,20 +99,6 @@ jobs:
           sed -i.bak 's/this->CastF16ToF32Kernel = &MlasCastF16ToF32KernelSse;/this->CastF16ToF32Kernel = nullptr;/' \
             onnxruntime/core/mlas/lib/platform.cpp
 
-          # --- cpuinfo stubs for OHOS (all architectures) ---
-          CPUINFO_H=$(find . -name "cpuinfo.h" -path "*/cpuinfo/*" | head -1)
-          if [ -n "$CPUINFO_H" ]; then
-            echo "// OHOS stubs for cpuinfo symbols" >> "$CPUINFO_H"
-            echo "#ifdef __OHOS__" >> "$CPUINFO_H"
-            echo "static inline void cpuinfo_x86_linux_init(void) {}" >> "$CPUINFO_H"
-            echo "static inline void cpuinfo_x86_linux_deinit(void) {}" >> "$CPUINFO_H"
-            echo "static inline void cpuinfo_arm_linux_init(void) {}" >> "$CPUINFO_H"
-            echo "static inline void cpuinfo_arm_linux_deinit(void) {}" >> "$CPUINFO_H"
-            echo "struct cpuinfo_isa { int dummy; };" >> "$CPUINFO_H"
-            echo "static inline struct cpuinfo_isa cpuinfo_isa = {0};" >> "$CPUINFO_H"
-            echo "#endif" >> "$CPUINFO_H"
-          fi
-
           # --- matmul: disable bf16 acceleration + replace SBGemmPackBSize call ---
           sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
             onnxruntime/core/providers/cpu/math/matmul.h
@@ -192,6 +178,7 @@ jobs:
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax" \
             --compile-no-warning-as-error \
+            -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_BUILD_UNIT_TESTS=OFF \
             -Donnxruntime_BUILD_BENCHMARKS=OFF \
             -Donnxruntime_ENABLE_PYTHON=OFF \
