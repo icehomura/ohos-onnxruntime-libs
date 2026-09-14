@@ -158,7 +158,6 @@ jobs:
         working-directory: onnxruntime
         shell: bash
         run: |
-          cd onnxruntime
           mkdir build-shared && cd build-shared
 
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
