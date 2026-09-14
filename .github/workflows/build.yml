@@ -103,6 +103,10 @@ jobs:
           sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
             onnxruntime/core/providers/cpu/math/matmul.h
 
+          # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
+          find onnxruntime -name '*.cpp' -o -name '*.h' | \
+            xargs sed -i.bak 's/std::make_unique_for_overwrite/std::make_unique/g' 2>/dev/null || true
+
           # --- MLAS SBGEMM stubs for OHOS ---
           f=onnxruntime/core/mlas/inc/mlas.h
           printf '\n#ifdef __OHOS__\n' >> $f
