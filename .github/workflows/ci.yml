@@ -180,9 +180,8 @@ jobs:
             GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
           fi
 
-          # --- Disable cpuinfo in cmake: remove linking from onnxruntime_common.cmake ---
-          sed -i.bak '/cpuinfo::cpuinfo/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
-          sed -i.bak '/CPUINFO_SUPPORTED/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
+          # --- Disable cpuinfo in cmake: remove entire if(CPUINFO_SUPPORTED) block ---
+          sed -i.bak '/if(CPUINFO_SUPPORT/,/endif/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
