@@ -180,9 +180,9 @@ jobs:
           fi
 
           # --- Compile cpuinfo stub with correct arch compiler (needs $CC) ---
-          $CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
+          $CC -c -o cmake/cpuinfo_ohos_stub.o ../cmake/cpuinfo_ohos_stub.c
           ar rcs cmake/libcpuinfo_ohos_stub.a cmake/cpuinfo_ohos_stub.o
-          cp cmake/libcpuinfo_ohos_stub.a $PWD/../cmake/libcpuinfo_ohos_stub.a
+          cp cmake/libcpuinfo_ohos_stub.a $PWD/../../cmake/libcpuinfo_ohos_stub.a
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
