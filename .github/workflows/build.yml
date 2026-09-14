@@ -116,9 +116,9 @@ jobs:
           void cpuinfo_arm_linux_init(void) {}
           void cpuinfo_arm_linux_deinit(void) {}
           EOF
-          # Compile stub into a static library and link it
-          CMAKE_C_COMPILER_PATH=$(which $CC)
-          $CMAKE_C_COMPILER_PATH -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
+          # Compile stub with OHOS clang
+          STUB_CC=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/clang
+          $STUB_CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
           ar rcs cmake/libcpuinfo_ohos_stub.a cmake/cpuinfo_ohos_stub.o
           # Add the stub library to ORT's link flags
           echo 'list(APPEND onnxruntime_EXTERNAL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/libcpuinfo_ohos_stub.a)' >> cmake/onnxruntime_mlas.cmake
