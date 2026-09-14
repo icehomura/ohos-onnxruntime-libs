@@ -99,6 +99,18 @@ jobs:
           sed -i.bak 's/this->CastF16ToF32Kernel = &MlasCastF16ToF32KernelSse;/this->CastF16ToF32Kernel = nullptr;/' \
             onnxruntime/core/mlas/lib/platform.cpp
 
+          # --- x86_64: stub out cpuinfo symbols that don't exist on OHOS ---
+          if [[ "${{ matrix.arch }}" == "x86_64" ]]; then
+            CPUINFO_H=$(find . -name "cpuinfo.h" -path "*/cpuinfo/*" | head -1)
+            if [ -n "$CPUINFO_H" ]; then
+              echo "// OHOS stubs for cpuinfo x86 symbols" >> "$CPUINFO_H"
+              echo "#ifdef __OHOS__" >> "$CPUINFO_H"
+              echo "static inline void cpuinfo_x86_linux_init(void) {}" >> "$CPUINFO_H"
+              echo "static inline void cpuinfo_x86_linux_deinit(void) {}" >> "$CPUINFO_H"
+              echo "#endif" >> "$CPUINFO_H"
+            fi
+          fi
+
           # --- matmul: disable bf16 acceleration ---
           sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
             onnxruntime/core/providers/cpu/math/matmul.h
@@ -128,6 +140,7 @@ jobs:
           printf 'static inline void MlasSBGemmConvertPackB(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,bool,size_t,size_t,const float*,size_t,void*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
           printf 'static inline void MlasSBGemmBatch(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,size_t,size_t,size_t,size_t,const MLAS_SBGEMM_DATA_PARAMS*,MLAS_THREADPOOL*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
           printf 'static inline bool MlasBf16AccelerationSupported(){return false;}\n' >> $f
+          printf 'static inline size_t MlasSBGemmPackBSize(CBLAS_TRANSPOSE,size_t,size_t,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){return 0;}\n' >> $f
           printf '#endif\n' >> $f
 
           echo "=== Patches applied ==="
