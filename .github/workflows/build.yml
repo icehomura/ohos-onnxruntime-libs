@@ -107,6 +107,13 @@ jobs:
           find onnxruntime -name '*.cpp' -o -name '*.h' | \
             xargs sed -i.bak 's/std::make_unique_for_overwrite/std::make_unique/g' 2>/dev/null || true
 
+          # --- C++17 compat: fix structured bindings in model_editor_c_api.cc ---
+          target_file=onnxruntime/core/session/model_editor_c_api.cc
+          if [ -f "$target_file" ]; then
+            sed -i 's/auto \[ptr_it, ptr_inserted\] = graph->initializer_ptrs.insert(tensor);/auto insert_res_1 = graph->initializer_ptrs.insert(tensor); auto ptr_it = insert_res_1.first; auto ptr_inserted = insert_res_1.second;/g' "$target_file"
+            sed -i 's/auto \[ptr_it, ptr_inserted\] = graph->node_ptrs.insert(node);/auto insert_res_2 = graph->node_ptrs.insert(node); auto ptr_it = insert_res_2.first; auto ptr_inserted = insert_res_2.second;/g' "$target_file"
+          fi
+
           # --- MLAS SBGEMM stubs for OHOS ---
           f=onnxruntime/core/mlas/inc/mlas.h
           printf '\n#ifdef __OHOS__\n' >> $f
