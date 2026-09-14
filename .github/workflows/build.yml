@@ -114,8 +114,8 @@ jobs:
           # --- matmul: disable bf16 acceleration + replace SBGemmPackBSize call ---
           sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
             onnxruntime/core/providers/cpu/math/matmul.h
-          # Replace MlasSBGemmPackBSize calls with 0 to avoid signature mismatch
-          sed -i.bak 's/packed_b_size = MlasSBGemmPackBSize([^)]*)/packed_b_size = 0/' \
+          # Replace MlasSBGemmPackBSize multi-line call with 0
+          sed -i.bak '/packed_b_size = MlasSBGemmPackBSize/,/);/c\  packed_b_size = 0;  // OHOS: SBGemm disabled' \
             onnxruntime/core/providers/cpu/math/matmul.cc
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
