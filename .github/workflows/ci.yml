@@ -175,7 +175,7 @@ jobs:
               ;;
           esac
 
-          # --- Compile cpuinfo stub with correct arch compiler ---
+          # --- Compile cpuinfo stub with correct arch compiler (needs $CC) ---
           $CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
           ar rcs cmake/libcpuinfo_ohos_stub.a cmake/cpuinfo_ohos_stub.o
           cp cmake/libcpuinfo_ohos_stub.a $PWD/../cmake/libcpuinfo_ohos_stub.a
