@@ -1,6 +1,8 @@
 name: Build ONNX Runtime for OpenHarmony
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       version:
