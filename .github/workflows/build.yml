@@ -193,7 +193,7 @@ jobs:
             -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax $PWD/../cmake/libcpuinfo_ohos_stub.a" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_USE_CPUINFO=OFF \
