@@ -111,9 +111,12 @@ jobs:
             fi
           fi
 
-          # --- matmul: disable bf16 acceleration ---
+          # --- matmul: disable bf16 acceleration + replace SBGemmPackBSize call ---
           sed -i.bak 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
             onnxruntime/core/providers/cpu/math/matmul.h
+          # Replace MlasSBGemmPackBSize calls with 0 to avoid signature mismatch
+          sed -i.bak 's/packed_b_size = MlasSBGemmPackBSize([^)]*)/packed_b_size = 0/' \
+            onnxruntime/core/providers/cpu/math/matmul.cc
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
           find onnxruntime -name '*.cpp' -o -name '*.h' | \
@@ -142,9 +145,11 @@ jobs:
           printf 'static inline bool MlasBf16AccelerationSupported(){return false;}\n' >> $f
           printf '#endif\n' >> $f
 
-          # Also replace the original MlasSBGemmPackBSize declaration with 6-arg stub
+          # Also delete ALL MlasSBGemmPackBSize related lines and add 6-arg stub
           MLAS_H=onnxruntime/core/mlas/inc/mlas.h
           sed -i.bak '/MlasSBGemmPackBSize/d' "$MLAS_H"
+          # Also remove any old 4-arg or mismatched declarations
+          sed -i.bak '/MlasSBGemmPackB/d' "$MLAS_H"
           echo 'static inline size_t MlasSBGemmPackBSize(CBLAS_TRANSPOSE a, size_t b, size_t c, const void* d, size_t e, size_t f) { (void)a;(void)b;(void)c;(void)d;(void)e;(void)f; return 0; }' >> "$MLAS_H"
 
           echo "=== Patches applied ==="
