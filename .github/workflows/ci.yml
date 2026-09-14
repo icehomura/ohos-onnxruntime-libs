@@ -163,17 +163,19 @@ jobs:
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
 
           arch=${{ matrix.arch }}
-          case $arch in
-            arm64-v8a)
-              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
-              ;;
-            armeabi-v7a)
-              GLOBAL_FLAGS="-O3 -mfloat-abi=softfp -mfpu=neon -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
-              ;;
-            x86_64)
-              GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
-              ;;
-          esac
+          if [[ "$arch" == "arm64-v8a" ]]; then
+            CC=$OHOS_NATIVE/llvm/bin/aarch64-unknown-linux-ohos-clang
+            CXX=$OHOS_NATIVE/llvm/bin/aarch64-unknown-linux-ohos-clang++
+            GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
+          elif [[ "$arch" == "armeabi-v7a" ]]; then
+            CC=$OHOS_NATIVE/llvm/bin/armv7a-unknown-linux-ohos-clang
+            CXX=$OHOS_NATIVE/llvm/bin/armv7a-unknown-linux-ohos-clang++
+            GLOBAL_FLAGS="-O3 -mfloat-abi=softfp -mfpu=neon -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
+          elif [[ "$arch" == "x86_64" ]]; then
+            CC=$OHOS_NATIVE/llvm/bin/x86_64-unknown-linux-ohos-clang
+            CXX=$OHOS_NATIVE/llvm/bin/x86_64-unknown-linux-ohos-clang++
+            GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
+          fi
 
           # --- Compile cpuinfo stub with correct arch compiler (needs $CC) ---
           $CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
