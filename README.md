@@ -41,10 +41,16 @@ git push origin v1.29.1
 
 ## 技术细节
 
-- 基于 [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) 的 OHOS 构建方案
+- 基于 [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) 的 OHOS 构建方案（patch 策略、cmake 参数、musl 兼容性处理均参考该项目）
 - 工具链: OpenHarmony SDK（通过 [openharmony-rs/ohos-sdk](https://github.com/openharmony-rs/ohos-sdk) 下载）
 - 编译标志: `--compile-no-warning-as-error` 解决 musl/clang 兼容性
-- 自动 patch: bfloat16_t、pthread_setaffinity_np、fp16/bf16 MLAS 内核、SBGEMM stubs
+- 自动 patch: bfloat16_t、pthread_setaffinity_np、fp16/bf16 MLAS 内核、SBGEMM stubs、structured bindings、make_unique_for_overwrite
+
+## 致谢
+
+- [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) — OHOS 交叉编译方案的主要参考
+- [ggg5111_admin/ohos_-onnx](https://gitee.com/ggg5111_admin/ohos_-onnx) — OHOS ORT 构建参考
+- [openharmony-rs/ohos-sdk](https://github.com/openharmony-rs/ohos-sdk) — OpenHarmony SDK 预编译包
 
 ## 许可证
 

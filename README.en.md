@@ -39,10 +39,16 @@ git push origin v1.29.1
 
 ## Technical Details
 
-- Based on [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) OHOS build approach
+- Based on [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) OHOS build approach (patch strategy, cmake flags, musl compatibility)
 - Toolchain: OpenHarmony SDK (via [openharmony-rs/ohos-sdk](https://github.com/openharmony-rs/ohos-sdk))
 - Build flags: `--compile-no-warning-as-error` for musl/clang compatibility
-- Auto-patches: bfloat16_t, pthread_setaffinity_np, fp16/bf16 MLAS kernels, SBGEMM stubs
+- Auto-patches: bfloat16_t, pthread_setaffinity_np, fp16/bf16 MLAS kernels, SBGEMM stubs, structured bindings, make_unique_for_overwrite
+
+## Credits
+
+- [csukuangfj/onnxruntime-libs](https://github.com/csukuangfj/onnxruntime-libs) — primary reference for OHOS cross-compilation
+- [ggg5111_admin/ohos_-onnx](https://gitee.com/ggg5111_admin/ohos_-onnx) — OHOS ORT build reference
+- [openharmony-rs/ohos-sdk](https://github.com/openharmony-rs/ohos-sdk) — OpenHarmony SDK prebuilt packages
 
 ## License
 
