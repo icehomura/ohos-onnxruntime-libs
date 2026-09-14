@@ -106,22 +106,16 @@ jobs:
           sed -i.bak '/packed_b_size = MlasSBGemmPackBSize/,/);/c\  packed_b_size = 0;  // OHOS: SBGemm disabled' \
             onnxruntime/core/providers/cpu/math/matmul.cc
 
-          # --- Create cpuinfo stub and compile separately ---
+          # --- Create cpuinfo stub source (compiled in Build step with correct arch compiler) ---
           cat > cmake/cpuinfo_ohos_stub.c << 'EOF'
-          #include <stddef.h>
-          struct cpuinfo_isa { int dummy; };
-          struct cpuinfo_isa cpuinfo_isa = {0};
-          void cpuinfo_x86_linux_init(void) {}
-          void cpuinfo_x86_linux_deinit(void) {}
-          void cpuinfo_arm_linux_init(void) {}
-          void cpuinfo_arm_linux_deinit(void) {}
-          EOF
-          # Compile stub with OHOS clang
-          STUB_CC=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/clang
-          $STUB_CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
-          ar rcs cmake/libcpuinfo_ohos_stub.a cmake/cpuinfo_ohos_stub.o
-          # Add the stub library to ORT's link flags
-          echo 'list(APPEND onnxruntime_EXTERNAL_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/libcpuinfo_ohos_stub.a)' >> cmake/onnxruntime_mlas.cmake
+#include <stddef.h>
+struct cpuinfo_isa { int dummy; };
+struct cpuinfo_isa cpuinfo_isa = {0};
+void cpuinfo_x86_linux_init(void) {}
+void cpuinfo_x86_linux_deinit(void) {}
+void cpuinfo_arm_linux_init(void) {}
+void cpuinfo_arm_linux_deinit(void) {}
+EOF
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
           find onnxruntime -name '*.cpp' -o -name '*.h' | \
@@ -180,6 +174,11 @@ jobs:
               GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
               ;;
           esac
+
+          # --- Compile cpuinfo stub with correct arch compiler ---
+          $CC -c -o cmake/cpuinfo_ohos_stub.o cmake/cpuinfo_ohos_stub.c
+          ar rcs cmake/libcpuinfo_ohos_stub.a cmake/cpuinfo_ohos_stub.o
+          cp cmake/libcpuinfo_ohos_stub.a $PWD/../cmake/libcpuinfo_ohos_stub.a
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
