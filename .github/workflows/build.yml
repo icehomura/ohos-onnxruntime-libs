@@ -179,6 +179,9 @@ jobs:
             -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
+            -Donnxruntime_USE_CPUINFO=OFF \
+            -DCPUINFO_ENABLE=OFF \
+            -DCPUINFO_SUPPORTED=0 \
             -Donnxruntime_BUILD_UNIT_TESTS=OFF \
             -Donnxruntime_BUILD_BENCHMARKS=OFF \
             -Donnxruntime_ENABLE_PYTHON=OFF \
