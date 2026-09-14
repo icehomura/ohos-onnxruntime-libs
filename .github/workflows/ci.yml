@@ -180,17 +180,9 @@ jobs:
             GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
           fi
 
-          # --- Disable cpuinfo: prevent FetchContent from building it ---
-          sed -i.bak '/FetchContent_Declare.*cpuinfo/,/)/c\# cpuinfo disabled for OHOS' \
-            cmake/deps.txt cmake/CMakeLists.txt 2>/dev/null || true
-          # Also patch the cpuinfo source to be empty
-          mkdir -p onnxruntime/third_party/cpuinfo
-          echo 'void cpuinfo_x86_linux_init(void) {}' > onnxruntime/third_party/cpuinfo/cpuinfo.c
-          echo 'void cpuinfo_x86_linux_deinit(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
-          echo 'void cpuinfo_arm_linux_init(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
-          echo 'void cpuinfo_arm_linux_deinit(void) {}' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
-          echo 'struct cpuinfo_isa { int dummy; };' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
-          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> onnxruntime/third_party/cpuinfo/cpuinfo.c
+          # --- Disable cpuinfo in cmake: remove linking from onnxruntime_common.cmake ---
+          sed -i.bak '/cpuinfo::cpuinfo/d' cmake/onnxruntime_common.cmake
+          sed -i.bak '/CPUINFO_SUPPORTED/d' cmake/onnxruntime_common.cmake
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
