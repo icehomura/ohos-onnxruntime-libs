@@ -183,7 +183,8 @@ jobs:
           # --- Compile cpuinfo stub with correct arch compiler (needs $CC) ---
           $CC -c -o cpuinfo_ohos_stub.o ../cmake/cpuinfo_ohos_stub.c
           ar rcs cpuinfo_ohos_stub.a cpuinfo_ohos_stub.o
-          cp cpuinfo_ohos_stub.a $PWD/../../cmake/libcpuinfo_ohos_stub.a
+          STUB_ABS=$(pwd)/cpuinfo_ohos_stub.a
+          echo "Stub at: $STUB_ABS"
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
@@ -197,7 +198,7 @@ jobs:
             -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax $PWD/../cmake/libcpuinfo_ohos_stub.a" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax $STUB_ABS" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_USE_CPUINFO=OFF \
