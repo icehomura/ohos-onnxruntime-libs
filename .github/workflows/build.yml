@@ -107,16 +107,14 @@ jobs:
             onnxruntime/core/providers/cpu/math/matmul.cc
 
           # --- Create cpuinfo stub for OHOS x86_64 ---
-          cat > onnxruntime/cmake/cpuinfo_ohos_stub.c << 'STUB_EOF'
-          #include <stddef.h>
-          struct cpuinfo_isa { int dummy; };
-          struct cpuinfo_isa cpuinfo_isa = {0};
-          void cpuinfo_x86_linux_init(void) {}
-          void cpuinfo_x86_linux_deinit(void) {}
-          void cpuinfo_arm_linux_init(void) {}
-          void cpuinfo_arm_linux_deinit(void) {}
-          STUB_EOF
-          # Add stub to cmake build
+          echo '#include <stddef.h>' > onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'struct cpuinfo_isa { int dummy; };' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'void cpuinfo_x86_linux_init(void) {}' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'void cpuinfo_x86_linux_deinit(void) {}' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'void cpuinfo_arm_linux_init(void) {}' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          echo 'void cpuinfo_arm_linux_deinit(void) {}' >> onnxruntime/cmake/cpuinfo_ohos_stub.c
+          cat onnxruntime/cmake/cpuinfo_ohos_stub.c
           echo 'list(APPEND onnxruntime_mlas_srcs ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/cpuinfo_ohos_stub.c)' >> onnxruntime/cmake/onnxruntime_mlas.cmake
 
           # --- C++17 compat: replace make_unique_for_overwrite with make_unique ---
