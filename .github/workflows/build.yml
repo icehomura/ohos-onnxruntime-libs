@@ -140,8 +140,11 @@ jobs:
           printf 'static inline void MlasSBGemmConvertPackB(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,bool,size_t,size_t,const float*,size_t,void*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
           printf 'static inline void MlasSBGemmBatch(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,size_t,size_t,size_t,size_t,const MLAS_SBGEMM_DATA_PARAMS*,MLAS_THREADPOOL*,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*){}\n' >> $f
           printf 'static inline bool MlasBf16AccelerationSupported(){return false;}\n' >> $f
-          printf 'static inline size_t MlasSBGemmPackBSize(CBLAS_TRANSPOSE a,size_t b,size_t c,const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG*d,size_t e,size_t f){(void)a;(void)b;(void)c;(void)d;(void)e;(void)f;return 0;}\n' >> $f
           printf '#endif\n' >> $f
+
+          # Also replace the original 4-arg MlasSBGemmPackBSize declaration with 6-arg version
+          MLAS_H=onnxruntime/core/mlas/inc/mlas.h
+          sed -i.bak 's/static inline size_t MlasSBGemmPackBSize(CBLAS_TRANSPOSE, size_t, size_t, const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG\*)/static inline size_t MlasSBGemmPackBSize(CBLAS_TRANSPOSE a, size_t b, size_t c, const MLAS_BACKEND_KERNEL_SELECTOR_CONFIG* d, size_t e, size_t f) { (void)a; (void)b; (void)c; (void)d; (void)e; (void)f; return 0; }/' "$MLAS_H"
 
           echo "=== Patches applied ==="
           git diff --stat
