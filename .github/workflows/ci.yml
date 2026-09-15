@@ -182,11 +182,8 @@ jobs:
 
           # --- Disable cpuinfo in cmake: remove the if/endif block ---
           CMAKE_FILE=$GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
-          sed -i '/^if(CPUINFO_SUPPORTED)/d' "$CMAKE_FILE"
-          sed -i '/Link cpuinfo if supported/d' "$CMAKE_FILE"
-          sed -i '/cpuinfo::cpuinfo/d' "$CMAKE_FILE"
-          sed -i '/onnxruntime_EXTERNAL_LIBRARIES.*cpuinfo/d' "$CMAKE_FILE"
-          sed -i '/^endif()/{ N; /^endif()\n$/d; }' "$CMAKE_FILE"
+          awk '/if\(CPUINFO_SUPPORTED\)/{skip=1;next} skip&&/^endif\(\)/{skip=0;next} !skip' "$CMAKE_FILE" > "$CMAKE_FILE.tmp" && mv "$CMAKE_FILE.tmp" "$CMAKE_FILE"
+          echo "Patched cmake: removed CPUINFO_SUPPORTED block"
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
