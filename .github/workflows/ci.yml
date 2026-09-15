@@ -189,7 +189,7 @@ jobs:
           echo 'void cpuinfo_x86_linux_init(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'void cpuinfo_x86_linux_deinit(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           ls $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c && echo "STUB CREATED"
-          echo 'list(APPEND onnxruntime_common_src ${CMAKE_CURRENT_SOURCE_DIR}/ohos_cpuinfo_stub.c)' >> $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
+          echo 'list(APPEND onnxruntime_common_src_patterns ${CMAKE_CURRENT_SOURCE_DIR}/ohos_cpuinfo_stub.c)' >> $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
           echo "Patched: added ohos_cpuinfo_stub.c"
 
           cmake \
