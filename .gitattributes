@@ -1,0 +1,5 @@
+# Shell scripts and workflows must always use LF (CI runs on Linux); this
+# prevents Windows checkouts from introducing CRLF that break bash execution.
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
