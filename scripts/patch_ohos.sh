@@ -52,6 +52,13 @@ find onnxruntime/core/mlas -type f \( -name '*.h' -o -name '*.cpp' -o -name '*.c
 sed -i 's/#if !defined(__APPLE__)/#if !defined(__APPLE__) \&\& !defined(__OHOS__)/g' \
   onnxruntime/core/mlas/inc/mlas.h
 
+# ORT >= 1.30 gates the whole SBGEMM/bf16 API (declarations + bfloat16_t usage)
+# on MLAS_SBGEMM_AVAILABLE, which is only defined for ARM64+Linux. Disable it on
+# OHOS so the unsupported bf16 declarations drop out and the no-op stubs below
+# apply instead. No-op on versions without this exact guard.
+sed -i 's|#if defined(MLAS_TARGET_ARM64) && defined(__linux__)|#if defined(MLAS_TARGET_ARM64) \&\& defined(__linux__) \&\& !defined(__OHOS__)|g' \
+  onnxruntime/core/mlas/inc/mlas.h
+
 # ---------- 5. remove fp16/bf16-only translation units from MLAS build ----------
 pushd cmake
 for pat in \
@@ -90,11 +97,14 @@ sed -i 's/this->CastF16ToF32Kernel = &MlasCastF16ToF32KernelSse;/this->CastF16To
 sed -i 's/use_fastmath_mode_ = (config_ops == "1") && MlasBf16AccelerationSupported();/use_fastmath_mode_ = false;/' \
   onnxruntime/core/providers/cpu/math/matmul.h
 
-# ---------- 8. SBGEMM / bf16 stubs (their declarations were guarded out in #4) ----------
-cat >> onnxruntime/core/mlas/inc/mlas.h <<'EOF'
+# ---------- 8. SBGEMM / bf16 stubs (their upstream declarations are guarded out in #4) ----------
+MLAS_H=onnxruntime/core/mlas/inc/mlas.h
+if ! grep -q 'OHOS_SBGEMM_STUBS' "$MLAS_H"; then
+cat >> "$MLAS_H" <<'EOF'
 
 #ifdef __OHOS__
 // OHOS (clang-15) lacks ARM bf16/fp16 NEON intrinsics: provide no-op stubs.
+#define OHOS_SBGEMM_STUBS 1
 struct MLAS_SBGEMM_POSTPROCESSOR {};
 struct MLAS_SBGEMM_DATA_PARAMS {
   const void *A; const void *B; const float *Bias; float *C;
@@ -108,6 +118,7 @@ static inline void MlasSBGemmBatch(CBLAS_TRANSPOSE,CBLAS_TRANSPOSE,size_t,size_t
 static inline bool MlasBf16AccelerationSupported(){return false;}
 #endif
 EOF
+fi
 
 # ---------- 9. C++20 -> C++17 compatibility for clang-15 libc++ ----------
 find onnxruntime -type f \( -name '*.cpp' -o -name '*.h' -o -name '*.cc' \) -print0 \
