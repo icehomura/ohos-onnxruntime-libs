@@ -160,7 +160,11 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/onnxruntime
           echo "BUILD PWD=$(pwd)"
-          ls cmake/cpuinfo_ohos_stub.c 2>/dev/null && echo "STUB FOUND" || echo "STUB NOT FOUND"
+          # Compile cpuinfo stub (absolute path from Patch step)
+          $CC -c -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
+          ar rcs libohos_cpuinfo_stub.a ohos_cpuinfo_stub.o
+          echo "STUB_LIB=$(pwd)/libohos_cpuinfo_stub.a"
+          ls libohos_cpuinfo_stub.a
           mkdir build-shared && cd build-shared
 
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
@@ -189,8 +193,7 @@ jobs:
           echo 'void cpuinfo_x86_linux_init(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'void cpuinfo_x86_linux_deinit(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           ls $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c && echo "STUB CREATED"
-          echo 'list(APPEND onnxruntime_common_src_patterns ${CMAKE_CURRENT_SOURCE_DIR}/ohos_cpuinfo_stub.c)' >> $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
-          echo "Patched: added ohos_cpuinfo_stub.c"
+          echo "Patched: stub ready for compilation in Build step"
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
@@ -204,7 +207,7 @@ jobs:
             -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined -Wl,--whole-archive $PWD/../../cmake/libohos_cpuinfo_stub.a -Wl,--no-whole-archive" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_USE_CPUINFO=OFF \
