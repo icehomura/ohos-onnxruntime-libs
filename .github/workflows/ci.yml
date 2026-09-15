@@ -160,11 +160,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/onnxruntime
           echo "BUILD PWD=$(pwd)"
-          # Compile cpuinfo stub (absolute path from Patch step)
-          $CC -c -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
-          ar rcs libohos_cpuinfo_stub.a ohos_cpuinfo_stub.o
-          echo "STUB_LIB=$(pwd)/libohos_cpuinfo_stub.a"
-          ls libohos_cpuinfo_stub.a
           mkdir build-shared && cd build-shared
 
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
