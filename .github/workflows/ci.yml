@@ -181,23 +181,15 @@ jobs:
           fi
 
           # --- Disable cpuinfo: create stub .c and add to cmake ---
-          cat > onnxruntime/cmake/ohos_cpuinfo_stub.c << 'CEOF'
-#include <stddef.h>
-#ifdef __aarch64__
-struct cpuinfo_isa { int dummy; };
-struct cpuinfo_isa cpuinfo_isa = {0};
-void cpuinfo_arm_linux_init(void) {}
-void cpuinfo_arm_linux_deinit(void) {}
-#else
-struct cpuinfo_isa { int dummy; };
-struct cpuinfo_isa cpuinfo_isa = {0};
-void cpuinfo_x86_linux_init(void) {}
-void cpuinfo_x86_linux_deinit(void) {}
-#endif
-CEOF
-          # Append stub to onnxruntime_common.cmake as additional source
+          echo '#include <stddef.h>' > onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'struct cpuinfo_isa { int dummy; };' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'void cpuinfo_arm_linux_init(void) {}' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'void cpuinfo_arm_linux_deinit(void) {}' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'void cpuinfo_x86_linux_init(void) {}' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'void cpuinfo_x86_linux_deinit(void) {}' >> onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'list(APPEND onnxruntime_common_src ${CMAKE_CURRENT_SOURCE_DIR}/ohos_cpuinfo_stub.c)' >> $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
-          echo "Patched: added ohos_cpuinfo_stub.c to onnxruntime_common_src"
+          echo "Patched: added ohos_cpuinfo_stub.c"
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
