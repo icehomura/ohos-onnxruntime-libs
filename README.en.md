@@ -1,3 +1,5 @@
+**English** | [中文](README.md)
+
 # ohos-onnxruntime-libs
 
 Pre-built [ONNX Runtime](https://github.com/microsoft/onnxruntime) shared libraries for OpenHarmony (OHOS). A single run builds all three ABIs: `arm64-v8a`, `armeabi-v7a`, and `x86_64`.

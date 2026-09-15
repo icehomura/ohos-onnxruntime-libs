@@ -1,3 +1,5 @@
+[English](README.en.md) | **中文**
+
 # ohos-onnxruntime-libs
 
 预编译的 [ONNX Runtime](https://github.com/microsoft/onnxruntime) 共享库，适用于 OpenHarmony (OHOS)，一次构建同时产出 `arm64-v8a`、`armeabi-v7a`、`x86_64` 三个架构。
