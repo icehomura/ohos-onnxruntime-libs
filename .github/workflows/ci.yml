@@ -180,8 +180,8 @@ jobs:
             GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
           fi
 
-          # --- Disable cpuinfo in cmake: remove entire if(CPUINFO_SUPPORTED) block ---
-          sed -i.bak '/^if(CPUINFO_SUPPORTED)/,/^endif()/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
+          # --- Disable cpuinfo in cmake: use Python patch script ---
+          python3 $GITHUB_WORKSPACE/patch_ohos.py
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
