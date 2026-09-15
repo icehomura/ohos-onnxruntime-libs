@@ -210,7 +210,7 @@ jobs:
             -DCMAKE_C_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_CXX_FLAGS="$GLOBAL_FLAGS" \
             -DCMAKE_ASM_FLAGS="$GLOBAL_FLAGS" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined -Wl,--whole-archive $PWD/../../cmake/libohos_cpuinfo_stub.a -Wl,--no-whole-archive" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--no-relax -Wl,--allow-shlib-undefined -Wl,--whole-archive $STUB_ABS -Wl,--no-whole-archive" \
             --compile-no-warning-as-error \
             -Donnxruntime_DISABLE_CPUINFO=ON \
             -Donnxruntime_USE_CPUINFO=OFF \
