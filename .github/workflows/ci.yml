@@ -181,7 +181,7 @@ jobs:
           fi
 
           # --- Disable cpuinfo in cmake: remove entire if(CPUINFO_SUPPORTED) block ---
-          sed -i.bak '/if(CPUINFO_SUPPORT/,/endif/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
+          sed -i.bak '/^if(CPUINFO_SUPPORTED)/,/^endif()/d' $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
