@@ -198,8 +198,8 @@ jobs:
           ls libohos_cpuinfo_stub.a 2>/dev/null && echo "STUB OK" || echo "STUB MISSING"
           STUB_ABS=$(pwd)/libohos_cpuinfo_stub.a
           echo "STUB_LIB=$STUB_ABS"
-          # Force-link stub to onnxruntime_shared target
-          echo "target_link_libraries(onnxruntime_shared PRIVATE -Wl,--whole-archive $STUB_ABS -Wl,--no-whole-archive)" >> $GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
+          echo "CMAKE_C_FLAGS: $C_FLAGS"
+          echo "CMAKE_SHARED_LINKER_FLAGS includes: --whole-archive $STUB_ABS"
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
