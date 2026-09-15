@@ -192,7 +192,7 @@ jobs:
 
           # --- Compile stub with arch-specific compiler ---
           echo "CC=$CC CXX=$CXX"
-          $CC -c -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c && echo "CC OK" || echo "CC FAILED"
+          $CC -c -fvisibility=default -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c && echo "CC OK" || echo "CC FAILED"
           ls ohos_cpuinfo_stub.o 2>/dev/null && echo "OBJ OK" || echo "OBJ MISSING"
           $OHOS_NATIVE/llvm/bin/llvm-ar rcs libohos_cpuinfo_stub.a ohos_cpuinfo_stub.o && echo "AR OK" || echo "AR FAILED"
           ls libohos_cpuinfo_stub.a 2>/dev/null && echo "STUB OK" || echo "STUB MISSING"
