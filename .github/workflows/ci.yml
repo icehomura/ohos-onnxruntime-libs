@@ -160,14 +160,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/onnxruntime
           echo "BUILD PWD=$(pwd)"
-
-          # --- Compile cpuinfo stub (before cd build-shared) ---
-          $CC -c -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
-          ar rcs libohos_cpuinfo_stub.a ohos_cpuinfo_stub.o
-          STUB_ABS=$GITHUB_WORKSPACE/onnxruntime/libohos_cpuinfo_stub.a
-          echo "STUB_LIB=$STUB_ABS"
-          ls $STUB_ABS
-
           mkdir build-shared && cd build-shared
 
           OHOS_NATIVE=$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native
@@ -197,6 +189,13 @@ jobs:
           echo 'void cpuinfo_x86_linux_deinit(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           ls $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c && echo "STUB CREATED"
           echo "Patched: stub ready for compilation in Build step"
+
+          # --- Compile stub with arch-specific compiler ---
+          $CC -c -o ohos_cpuinfo_stub.o $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
+          ar rcs libohos_cpuinfo_stub.a ohos_cpuinfo_stub.o
+          STUB_ABS=$GITHUB_WORKSPACE/onnxruntime/libohos_cpuinfo_stub.a
+          echo "STUB_LIB=$STUB_ABS"
+          ls $STUB_ABS
 
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=$OHOS_NATIVE/build/cmake/ohos.toolchain.cmake \
