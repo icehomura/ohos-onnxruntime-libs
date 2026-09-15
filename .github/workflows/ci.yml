@@ -182,8 +182,8 @@ jobs:
 
           # --- Disable cpuinfo: create stub .c and add to cmake ---
           echo '#include <stddef.h>' > $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
-          echo 'struct cpuinfo_isa { int dummy; };' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
-          echo 'struct cpuinfo_isa cpuinfo_isa = {0};' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'struct cpuinfo_arm_isa { int dummy; };' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
+          echo 'struct cpuinfo_arm_isa cpuinfo_isa = {0};' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'void cpuinfo_arm_linux_init(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'void cpuinfo_arm_linux_deinit(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
           echo 'void cpuinfo_x86_linux_init(void) {}' >> $GITHUB_WORKSPACE/onnxruntime/cmake/ohos_cpuinfo_stub.c
