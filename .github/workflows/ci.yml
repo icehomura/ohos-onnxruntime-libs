@@ -180,17 +180,15 @@ jobs:
             GLOBAL_FLAGS="-O3 -Wno-unused-parameter -Wno-unused-command-line-argument -DCPUINFO_SUPPORTED=0"
           fi
 
-          # --- Disable cpuinfo in cmake: inline Python patch ---
+          # --- Disable cpuinfo in cmake: remove if/endif block ---
+          CMAKE_FILE=$GITHUB_WORKSPACE/onnxruntime/cmake/onnxruntime_common.cmake
           python3 -c "
-import re, os
-cmake = os.path.join(os.environ.get('GITHUB_WORKSPACE','.'), 'onnxruntime', 'cmake', 'onnxruntime_common.cmake')
-with open(cmake) as f: c = f.read()
-new = re.sub(r'if\(CPUINFO_SUPPORTED\)\s*\n.*?endif\(\)', '# cpuinfo disabled for OHOS', c, flags=re.DOTALL)
-if new != c:
-    with open(cmake, 'w') as f: f.write(new)
-    print('Patched: removed CPUINFO_SUPPORTED block')
-else:
-    print('WARNING: no CPUINFO_SUPPORTED block found')
+import re
+p='$CMAKE_FILE'
+with open(p) as f: c=f.read()
+n=re.sub(r'if\(CPUINFO_SUPPORTED\).*?endif\(\)','',c,flags=re.DOTALL)
+open(p,'w').write(n)
+print('Patched: removed CPUINFO_SUPPORTED block')
 "
 
           cmake \
